@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import redirect, url_for
 from werkzeug.urls import url_quote
+from werkzeug.utils import url_quote
 from pytube import YouTube
 import os
 
