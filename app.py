@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import redirect, url_for
-from werkzeug.urls import url_quote
-from werkzeug.utils import url_quote
 from pytube import YouTube
 import os
 
@@ -62,5 +60,5 @@ def video_info():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
+ if __name__ == '__main__':
+    app.run(debug=True)
