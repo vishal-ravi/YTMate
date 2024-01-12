@@ -1,4 +1,6 @@
 Flask==2.0.1
 pytube==11.0.0
 gunicorn==21.0.1
+Werkzeug==0.16.1
 uvicorn
+
