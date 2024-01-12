@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #333;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        p {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        p.error {
+            color: #ff3333;
+        }
+
+        #loader {
+            display: none;
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Media queries for responsive design */
+        @media only screen and (max-width: 600px) {
+            form {
+                max-width: 100%;
+            }
+        }
+        #video-info {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        #video-info img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #qualities {
+            margin-top: 10px;
+        }
+
+        #download-button {
+            display: none;
+        }
+
+        #download-message {
+            display: none;
+            color: green;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Downloader</h1>
+    <form action="/download" method="post" onsubmit="showLoader()">
+        <label for="url">Enter the URL of the video:</label>
+        <input type="text" name="url" id="urlInput" required>
+        <br>
+        <button type="button" onclick="getVideoInfo()">Get Video Info</button>
+        <div id="loading" class="spinner"></div>
+        <br>
+        <div id="video-info"></div>
+        <div id="qualities"></div>
+        <br>
+        <div id="download-button">
+            <label for="selected_quality">Select Quality:</label>
+            <select name="selected_quality" id="selectedQuality" required></select>
+            <br>
+            <button type="submit">Download</button>
+        </div>
+    </form>
+
+    <div id="loader"></div>
+
+    <p id="result"></p>
+
+    <p id="error" class="error"></p>
+
+    <p id="download-message"></p>
+
+    <footer>
+        <p>Copyright &copy; Vishal Ravi</p>
+    </footer>
+
+    <script>
+        function showLoader() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('video-info').innerHTML = '';
+            document.getElementById('qualities').innerHTML = '';
+            document.getElementById('download-button').style.display = 'none';
+            document.getElementById('result').innerText = '';
+            document.getElementById('error').innerText = '';
+            document.getElementById('download-message').innerText = '';
+        }
+
+        function getVideoInfo() {
+            showLoader();
+            var url = document.getElementById('urlInput').value;
+            
+            if (url) {
+                fetch(`/video-info?url=${url}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displayVideoInfo(data);
+                        displayQualities(data.streams);
+                        showDownloadButton();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching video info:', error);
+                    })
+                    .finally(() => {
+                        hideLoader();
+                    });
+            }
+        }
+
+        function displayVideoInfo(videoInfo) {
+            var videoInfoElement = document.getElementById('video-info');
+            videoInfoElement.innerHTML = `
+                <p><strong>Title:</strong> ${videoInfo.title}</p>
+                <p><strong>Duration:</strong> ${videoInfo.duration}</p>
+                <p><strong>Thumbnail:</strong></p>
+                <img src="${videoInfo.thumbnail}" alt="Video Thumbnail">
+            `;
+        }
+
+        function displayQualities(streams) {
+            var selectedQualityElement = document.getElementById('selectedQuality');
+
+            if (streams.length > 0) {
+                streams.forEach(stream => {
+                    var option = document.createElement('option');
+                    option.value = stream.itag;
+                    if (stream.includes_audio_track) {
+                        option.text = `${stream.abr} (Audio) - ${stream.filesize}`;
+                    } else {
+                        option.text = `${stream.resolution || stream.abr} (Video) - ${stream.filesize}`;
+                    }
+                    selectedQualityElement.add(option);
+                });
+            } else {
+                selectedQualityElement.innerHTML = '<option value="" disabled>No available qualities for this video.</option>';
+            }
+        }
+
+        function showDownloadButton() {
+            document.getElementById('download-button').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
